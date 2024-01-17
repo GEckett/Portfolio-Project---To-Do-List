@@ -67,6 +67,28 @@
         #taskForm {
             display: none;
         }
+
+        .task-details {
+    display: flex;
+    justify-content: space-between;
+}
+
+.task-date {
+    flex-grow: 1;
+}
+
+.task-actions {
+    display: flex;
+    gap: 10px; /* Adjust the gap between buttons as needed */
+}
+
+.task-notes {
+    margin-top: 10px; /* Adjust the margin between the details and notes */
+}
+
+.completed {
+    background-color: #d4edda; /* Light green background for completed tasks */
+}
     </style>
 </head>
 <body>
@@ -78,6 +100,7 @@
 
         <!-- Form for adding tasks -->
         <form id="taskForm" class="add-task-form" method="post" action="{{ url_for('home') }}">
+            {{ form.csrf_token }}
             <div class="form-group">
                 <label for="{{ form.task_name.id }}">Title:</label>
                 {{ form.task_name(class="form-control", placeholder="Task Title", required="required") }}
@@ -101,17 +124,28 @@
             {{ form.submit }}
         </form>
 
-        <!-- Display existing tasks -->
-    {% for task in tasks %}
-        <div class="task">
-            <div class="task-title">{{ task.task_name }}</div>
-            <div class="task-details">
-                <div class="task-date">Start Date: {{ task.start_date or 'Not set' }}</div>
-                <div class="task-date">Due Date: {{ task.due_date or 'Not set' }}</div>
-                <div class="task-notes">{{ task.notes or 'No notes' }}</div>
+<!-- Display existing tasks -->
+{% for task in tasks %}
+    <div class="task {% if task.completed %}completed{% endif %}">
+        <div class="task-title">{{ task.task_name }}</div>
+        <div class="task-details">
+            <div class="task-date">Start Date: {{ task.start_date or 'Not set' }}</div>
+            <div class="task-date">Due Date: {{ task.due_date or 'Not set' }}</div>
+            <div class="task-actions">
+                {% if not task.completed %}
+                    <form method="post" action="{{ url_for('complete_task', task_id=task.id) }}">
+                        <button class="btn btn-success btn-sm" type="submit">Mark as Complete</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}">
+                    <button class="btn btn-danger btn-sm" type="submit">Delete Task</button>
+                </form>
             </div>
         </div>
-    {% endfor %}
+        <div class="task-notes">Notes: {{ task.notes or 'No notes' }}</div>
+    </div>
+{% endfor %}
+
 
         {% if tasks|length == 0 %}
             <p class="no-tasks">No tasks available.</p>

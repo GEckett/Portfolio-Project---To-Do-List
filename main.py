@@ -26,6 +26,7 @@ class ToDoList(db.Model):
 
     def to_dict(self):
         return {
+            'id': self.id,
             'task_name': self.task_name,
             'start_date': self.start_date,
             'due_date': self.due_date,
@@ -76,22 +77,26 @@ def home():
 
     return render_template("index.html", tasks=list_of_tasks, form=form)
 
-@app.route('/delete/<int:cafe_id>', methods=['POST'])
-def delete_task(id):
-    if request.method == 'POST':
-        try:
-            task_to_delete = ToDoList.query.get(id)
-            if task_to_delete:
-                db.session.delete(task_to_delete)
-                db.session.commit()
-                flash('Cafe deleted successfully!', 'success')
-            else:
-                flash('Cafe not found.', 'error')
-        except Exception as e:
-            db.session.rollback()
-            print(f"Exception during cafe deletion: {e}")
-            flash('An error occurred while deleting the cafe. Please try again.', 'error')
+@app.route("/complete_task/<int:task_id>", methods=['POST'])
+def complete_task(task_id):
+    task = ToDoList.query.get(task_id)
+    if task:
+        task.completed = True
+        db.session.commit()
+        flash('Task marked as complete!', 'success')
+    else:
+        flash('Task not found.', 'error')
+    return redirect(url_for('home'))
 
+@app.route("/delete_task/<int:task_id>", methods=['POST'])
+def delete_task(task_id):
+    task = ToDoList.query.get(task_id)
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+        flash('Task deleted successfully!', 'success')
+    else:
+        flash('Task not found.', 'error')
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
